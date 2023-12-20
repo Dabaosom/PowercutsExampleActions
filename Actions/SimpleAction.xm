@@ -1,21 +1,41 @@
-#import <libpowercuts/libpowercuts.h>
+// SimpleAction.xm
 
-@interface SimpleExampleAction : PCAction
-@end
-@implementation SimpleExampleAction
--(void) performActionForIdentifier:(NSString*)identifier {
-    //Do what you want here
-    NSLog(@"Performing action with identifier %@", identifier);
-}
--(NSString*) nameForIdentifier:(NSString*)identifier {
-    return @"Simple example action";
-}
--(NSString*) descriptionSummaryForIdentifier:(NSString*)identifier {
-    return @"Just an example action.";
-}
+#import <Powercuts/Powercuts.h>
+
+@interface SimpleAction : NSObject <PowercutsAction>
+
+@property (nonatomic, copy) NSString *title;
+
 @end
 
+@implementation SimpleAction
 
-%ctor {
-    [[PowercutsManager sharedInstance] registerActionWithIdentifier:@"com.anthopak.powercuts.action.simpleExample" action:[SimpleExampleAction new]];
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        _title = @"Simple Action";
+    }
+    return self;
 }
+
+- (void)performAction
+{
+    // 设置警报的标题
+    self.alertController.title = self.title;
+
+    // 注册电源故障警报
+    [self.application addObserver:self forKeyPath:@"applicationState" options:NSKeyValueObservingOptionNew context:nil];
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
+{
+    if ([keyPath isEqualToString:@"applicationState"]) {
+        if (self.application.applicationState == UIApplicationStateBackground) {
+            // 在后台启动电源故障警报
+            [self.alertController show];
+        }
+    }
+}
+
+@end
